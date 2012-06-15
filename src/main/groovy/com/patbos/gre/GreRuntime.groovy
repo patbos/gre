@@ -36,26 +36,29 @@ class GreRuntime {
     def exec(String command) {
         ChannelExec channelExec = (ChannelExec) session.openChannel("exec")
         channelExec.setCommand(command)
-        InputStream input = channelExec.getInputStream();
-        OutputStream output = channelExec.getOutputStream();
-        channelExec.setErrStream(System.err);
+        InputStream input = channelExec.getInputStream()
+        channelExec.setErrStream(System.err)
 
-        channelExec.connect();
+        channelExec.connect()
 
         try {
-            byte[] tmp = new byte[1024];
+            byte[] tmp = new byte[1024]
             while (true) {
                 while (input.available() > 0) {
-                    int i = input.read(tmp, 0, 1024);
-                    if (i < 0) break;
-                    System.out.print(new String(tmp, 0, i));
+                    int i = input.read(tmp, 0, 1024)
+                    if (i < 0)
+                        break
+                    System.out.print(new String(tmp, 0, i))
                 }
                 if (channelExec.isClosed()) {
                     if (verbose)
-                        System.out.println("exit-status: " + channelExec.getExitStatus());
-                    break;
+                        System.out.println("exit-status: " + channelExec.getExitStatus())
+                    break
                 }
-                try {Thread.sleep(100);} catch (Exception ee) {
+                try {
+                    Thread.sleep(100)
+                } catch (Exception ee) {
+
                 }
             }
         } finally {

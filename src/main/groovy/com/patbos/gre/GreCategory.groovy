@@ -9,7 +9,6 @@ class GreCategory {
     def static exec(Script script, String command) {
         def greRuntime = script.binding.getVariable("gre")
         greRuntime.exec(command)
-        //println(command)
     }
 
 
