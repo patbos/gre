@@ -13,6 +13,7 @@ class GreRuntime {
     def host
     def user
     def verbose
+    def log = new Logger()
 
     def init(def host, username, cert, verbose) {
         this.host = host
@@ -25,7 +26,7 @@ class GreRuntime {
 
         ssh.setHostKeyRepository(new NullHostKeyRepository())
         if (verbose) {
-            println("Connecting to $username@$host with cert $cert")
+            log.logVerbose(host, "Connecting to $username@$host with cert $cert")
         }
 
         try {
@@ -45,7 +46,7 @@ class GreRuntime {
             throw e
         }
         if (verbose) {
-            println("Connected")
+            log.logVerbose(host, "Connected")
         }
 
 
@@ -57,23 +58,23 @@ class GreRuntime {
         InputStream input = channelExec.getInputStream()
         InputStream error = channelExec.getErrStream();
         channelExec.connect()
-
+        log.logCommand(host, command)
         try {
             while (true) {
                 while (input.available() > 0) {
                     input.eachLine { line ->
-                        println(line)
+                        log.logStdOut(host, line)
                     }
                 }
                 while (error.available() > 0) {
                     error.eachLine { line ->
-                        println(line)
+                        log.logStdErr(host, line)
                     }
                 }
 
                 if (channelExec.isClosed()) {
                     if (verbose)
-                        System.out.println("exit-status: " + channelExec.getExitStatus())
+                        log.logCommandStatus(host, command, channelExec.getExitStatus())
                     break
                 }
                 try {
@@ -94,7 +95,7 @@ class GreRuntime {
         OutputStream outStream = channel.getOutputStream()
         InputStream inStream = channel.getInputStream()
         try {
-            println("Transfering file $file to $user@$host:$destination")
+            log.logVerbose(host, "Transfering file $file to $user@$host:$destination")
             channel.connect();
 
             if (checkAck(inStream) != 0) {
@@ -141,7 +142,7 @@ class GreRuntime {
             if (checkAck(inStream) != 0) {
                 throw new IOException("Failure tring to transfer file")
             }
-            println("Transfered file $file to $user@$host:$destination successfully")
+            log.logVerbose(host, "Transfered file $file to $user@$host:$destination successfully")
         } finally {
             if (outStream != null) {
                 outStream.close()
@@ -179,12 +180,12 @@ class GreRuntime {
 
     def close() {
         if (verbose) {
-            println("Disconnecting")
+            log.logVerbose(host, "Disconnecting")
         }
         if (session)
             session.disconnect()
         if (verbose) {
-            println("Disconnected")
+            log.logVerbose(host, "Disconnected")
         }
     }
 
