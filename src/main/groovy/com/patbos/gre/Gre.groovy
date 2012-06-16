@@ -4,7 +4,7 @@ class Gre {
 
     def static void main(def args) {
         def cli = new CliBuilder(usage: "gre [options] scriptfile")
-        cli.c(argName: 'cert', longOpt: 'cert', args:1, required: false, 'cert')
+        cli.k(argName: 'key', longOpt: 'key', args:1, required: false, 'SSH key to use when connection')
         cli.H(argName: 'hosts', longOpt: 'hosts', args:1, required: false, 'hosts to execute commands on, comma seperated')
         cli.u(argName: 'user', longOpt: 'user', args:1, required: false, 'user')
         cli.v('Verbose mode')
@@ -12,7 +12,7 @@ class Gre {
         cli.version(argName: 'version', longOpt: 'version', required: false, 'display version and exit')
         def options = cli.parse(args)
         if (options) {
-            def cert
+            def key
             def user
             if (options.h) {
                 cli.usage()
@@ -45,14 +45,14 @@ class Gre {
                 System.exit(1)
             }
 
-            if (options.c) {
-                cert = options.c
+            if (options.k) {
+                key = options.k
             } else {
-                cert = System.getProperty("user.home") + "/.ssh/id_rsa"
+                key = System.getProperty("user.home") + "/.ssh/id_rsa"
             }
 
-            if (!new File(cert).exists()) {
-                println("Could not find cert file: $cert")
+            if (!new File(key).exists()) {
+                println("Could not find key file: $key")
                 System.exit(1)
             }
 
@@ -72,7 +72,7 @@ class Gre {
                 binding.setVariable("gre", greRuntime)
                 def shell = new GroovyShell(binding)
                 Script script = shell.parse(scriptFile)
-                greRuntime.init(options.H, user, cert, options.v)
+                greRuntime.init(options.H, user, key, options.v)
                 use(GreCategory) {
                     script.run()
                 }

@@ -14,18 +14,18 @@ class GreRuntime {
     def verbose
     def log = new Logger()
 
-    def init(def host, username, cert, verbose) {
+    def init(def host, username, key, verbose) {
         this.host = host
         this.verbose = verbose
         user = username
         ssh = new JSch()
 
         session = ssh.getSession(username, host)
-        ssh.addIdentity(cert)
+        ssh.addIdentity(key)
 
         ssh.setHostKeyRepository(new NullHostKeyRepository())
         if (verbose) {
-            log.logVerbose(host, "Connecting to $username@$host with cert $cert")
+            log.logVerbose(host, "Connecting to $username@$host with key $key")
         }
 
         try {
