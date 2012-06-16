@@ -3,13 +3,12 @@ package com.patbos.gre
 import com.jcraft.jsch.ChannelExec
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.JSchException
-import com.jcraft.jsch.Session
 
 class GreRuntime {
 
 
-    JSch ssh
-    Session session
+    def ssh
+    def session
     def host
     def user
     def verbose
@@ -52,7 +51,7 @@ class GreRuntime {
 
     }
 
-    def exec(String command) {
+    def exec(def command) {
         ChannelExec channelExec = (ChannelExec) session.openChannel("exec")
         channelExec.setCommand(command)
         InputStream input = channelExec.getInputStream()
