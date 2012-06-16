@@ -1,8 +1,9 @@
 package com.patbos.gre
 
-import com.jcraft.jsch.JSch
-import com.jcraft.jsch.Session
 import com.jcraft.jsch.ChannelExec
+import com.jcraft.jsch.JSch
+import com.jcraft.jsch.JSchException
+import com.jcraft.jsch.Session
 
 class GreRuntime {
 
@@ -10,11 +11,13 @@ class GreRuntime {
     JSch ssh
     Session session
     def host
+    def user
     def verbose
 
     def init(def host, username, cert, verbose) {
         this.host = host
         this.verbose = verbose
+        user = username
         ssh = new JSch()
 
         session = ssh.getSession(username, host)
@@ -25,7 +28,22 @@ class GreRuntime {
             println("Connecting to $username@$host with cert $cert")
         }
 
-        session.connect()
+        try {
+            session.connect(2000)
+        } catch (JSchException e) {
+            if (e.cause instanceof UnknownHostException) {
+                throw e.cause
+            }
+
+            if (e.message.startsWith("java.net.UnknownHostException")) {
+                throw new UnknownHostException("$host")
+            }
+            if (e.message.startsWith("Auth fail")) {
+                throw new AuthenticationException()
+            }
+
+            throw e
+        }
         if (verbose) {
             println("Connected")
         }
@@ -37,19 +55,22 @@ class GreRuntime {
         ChannelExec channelExec = (ChannelExec) session.openChannel("exec")
         channelExec.setCommand(command)
         InputStream input = channelExec.getInputStream()
-        channelExec.setErrStream(System.err)
-
+        InputStream error = channelExec.getErrStream();
         channelExec.connect()
 
         try {
-            byte[] tmp = new byte[1024]
             while (true) {
                 while (input.available() > 0) {
-                    int i = input.read(tmp, 0, 1024)
-                    if (i < 0)
-                        break
-                    System.out.print(new String(tmp, 0, i))
+                    input.eachLine { line ->
+                        println(line)
+                    }
                 }
+                while (error.available() > 0) {
+                    error.eachLine { line ->
+                        println(line)
+                    }
+                }
+
                 if (channelExec.isClosed()) {
                     if (verbose)
                         System.out.println("exit-status: " + channelExec.getExitStatus())
@@ -65,6 +86,96 @@ class GreRuntime {
             channelExec.disconnect()
         }
     }
+
+    def put(File file, def destination) {
+        def command = "scp -p -t $destination"
+        def channel = session.openChannel("exec")
+        channel.setCommand(command)
+        OutputStream outStream = channel.getOutputStream()
+        InputStream inStream = channel.getInputStream()
+        try {
+            println("Transfering file $file to $user@$host:$destination")
+            channel.connect();
+
+            if (checkAck(inStream) != 0) {
+                throw new IOException("Failure tring to transfer file")
+            }
+
+            command = "T " + (file.lastModified() / 1000) + " 0";
+            // The access time should be sent here,
+            // but it is not accessible with JavaAPI ;-<
+            command += (" " + (file.lastModified() / 1000) + " 0\n");
+            outStream.write(command.getBytes()); outStream.flush();
+            if (checkAck(inStream) != 0) {
+                throw new IOException("Failure tring to transfer file")
+            }
+
+            // send "C0644 filesize filename", where filename should not include '/'
+            long filesize = file.length();
+            command = "C0644 " + filesize + " ";
+            if (destination.lastIndexOf('/') > 0) {
+                command += destination.substring(destination.lastIndexOf('/') + 1);
+            }
+            else {
+                command += destination;
+            }
+            command += "\n";
+            outStream.write(command.getBytes()); outStream.flush();
+            if (checkAck(inStream) != 0) {
+                throw new IOException("Failure tring to transfer file")
+            }
+
+            // send a content of lfile
+            def fis = new FileInputStream(file);
+            byte[] buf = new byte[1024];
+            while (true) {
+                int len = fis.read(buf, 0, buf.length);
+                if (len <= 0) break;
+                outStream.write(buf, 0, len); //out.flush();
+            }
+            fis.close();
+            // send '\0'
+            buf[0] = 0;
+            outStream.write(buf, 0, 1);
+            outStream.flush();
+            if (checkAck(inStream) != 0) {
+                throw new IOException("Failure tring to transfer file")
+            }
+            println("Transfered file $file to $user@$host:$destination successfully")
+        } finally {
+            if (outStream != null) {
+                outStream.close()
+            }
+            if (channel != null) {
+                channel.disconnect();
+            }
+        }
+
+
+    }
+
+    /**
+     *
+     * b may be 0 for success,
+     *          1 for error,
+     *          2 for fatal error,
+     *          -1
+     */
+    int checkAck(InputStream inStream) throws IOException {
+        int b = inStream.read();
+        if (b == 0) return b;
+        if (b == -1) return b;
+
+        if (b == 1 || b == 2) {
+            StringBuffer sb = new StringBuffer();
+            int c;
+            while ((c = inStream.read()) != '\n') {
+                sb.append((char) c);
+            }
+        }
+        return b;
+    }
+
 
     def close() {
         if (verbose) {
