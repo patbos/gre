@@ -5,21 +5,33 @@ class Gre {
     def static void main(def args) {
         def cli = new CliBuilder(usage: "gre [options] scriptfile")
         cli.k(argName: 'key', longOpt: 'key', args:1, required: false, 'SSH key to use when connection')
-        cli.H(argName: 'hosts', longOpt: 'hosts', args:1, required: false, 'hosts to execute commands on, comma seperated')
+        cli.H(argName: 'host', longOpt: 'host', args:1, required: false, 'host to execute commands on')
+        cli.p(argName: 'port', longOpt: 'port', args:1, required: false, 'port')
         cli.u(argName: 'user', longOpt: 'user', args:1, required: false, 'user')
         cli.v('Verbose mode')
         cli.h(argName: 'help', longOpt: 'help', required: false, 'display this help and exit')
         cli.version(argName: 'version', longOpt: 'version', required: false, 'display version and exit')
+
+
         def options = cli.parse(args)
         if (options) {
             def key
             def user
+            def port
             if (options.h) {
                 cli.usage()
                 System.exit(0)
             }
 
+            if (options.p) {
+                //TODO fix validation
+                port = Integer.parseInt(options.p)
+            } else {
+                port = 22;
+            }
+
             if (options.version) {
+                //TODO fix me
                 def version = Gre.class.package.implementationVersion
                 println("Gre version $version")
                 System.exit(0)
@@ -72,7 +84,7 @@ class Gre {
                 binding.setVariable("gre", greRuntime)
                 def shell = new GroovyShell(binding)
                 Script script = shell.parse(scriptFile)
-                greRuntime.init(options.H, user, key, options.v)
+                greRuntime.init(options.H, port, user, key, options.v)
                 use(GreCategory) {
                     script.run()
                 }

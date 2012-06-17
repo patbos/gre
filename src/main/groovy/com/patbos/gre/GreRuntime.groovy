@@ -14,13 +14,13 @@ class GreRuntime {
     def verbose
     def log = new Logger()
 
-    def init(def host, username, key, verbose) {
+    def init(def host, port, username, key, verbose) {
         this.host = host
         this.verbose = verbose
         user = username
         ssh = new JSch()
 
-        session = ssh.getSession(username, host)
+        session = ssh.getSession(username, host, port)
         ssh.addIdentity(key)
 
         ssh.setHostKeyRepository(new NullHostKeyRepository())
