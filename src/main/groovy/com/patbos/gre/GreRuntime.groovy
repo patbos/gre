@@ -50,8 +50,11 @@ class GreRuntime {
 
 
     }
-
     def exec(def command) {
+        exec(command, true)
+    }
+
+    def exec(def command, boolean throwError) {
         ChannelExec channelExec = (ChannelExec) session.openChannel("exec")
         channelExec.setCommand(command)
         InputStream input = channelExec.getInputStream()
@@ -80,6 +83,10 @@ class GreRuntime {
                     statusCode = channelExec.getExitStatus();
                     if (verbose)
                         log.logCommandStatus(host, command, statusCode)
+                    if (throwError && statusCode != 0) {
+                        throw new ExecutionException("Error executing '$command'")
+                    }
+
                     break
                 }
                 try {

@@ -11,6 +11,12 @@ class GreCategory {
         greRuntime.exec(command)
     }
 
+    def static exec(Script script, String command, boolean throwException) {
+        def greRuntime = script.binding.getVariable("gre")
+        greRuntime.exec(command, throwException)
+    }
+
+
     def static put(Script script, File file, String destination) {
         def greRuntime = script.binding.getVariable("gre")
         greRuntime.put(file, destination)

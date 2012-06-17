@@ -1,4 +1,1 @@
-exec("sw_vers").stdOut.each { line ->
-    println(line)
-
-}
+exec("sudo apt-get updat")

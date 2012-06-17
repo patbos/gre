@@ -97,6 +97,8 @@ class Gre {
                 println("Script error: $e.message")
             } catch (AuthenticationException e) {
                 println("Authentication failed")
+            } catch (ExecutionException e) {
+                println("Error executing script: $e.message")
             } catch (Exception e) {
                 println("Unknown Error")
                 e.printStackTrace()
