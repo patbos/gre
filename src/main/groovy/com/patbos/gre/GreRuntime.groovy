@@ -58,22 +58,28 @@ class GreRuntime {
         InputStream error = channelExec.getErrStream();
         channelExec.connect()
         log.logCommand(host, command)
+        def stdOut = new ArrayList<String>()
+        def stdErr = new ArrayList<String>()
+        def statusCode = -1;
         try {
             while (true) {
                 while (input.available() > 0) {
                     input.eachLine { line ->
+                        stdOut.add(line)
                         log.logStdOut(host, line)
                     }
                 }
                 while (error.available() > 0) {
                     error.eachLine { line ->
+                         stdErr.add(line)
                         log.logStdErr(host, line)
                     }
                 }
 
                 if (channelExec.isClosed()) {
+                    statusCode = channelExec.getExitStatus();
                     if (verbose)
-                        log.logCommandStatus(host, command, channelExec.getExitStatus())
+                        log.logCommandStatus(host, command, statusCode)
                     break
                 }
                 try {
@@ -85,6 +91,8 @@ class GreRuntime {
         } finally {
             channelExec.disconnect()
         }
+        return new ExecResult(stdErr: stdErr, stdOut: stdOut, exitCode: statusCode)
+
     }
 
     def put(File file, def destination) {
