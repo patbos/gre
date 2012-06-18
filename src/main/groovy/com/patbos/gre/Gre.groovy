@@ -1,23 +1,26 @@
 package com.patbos.gre
 
+import org.apache.commons.cli.Option
+
 class Gre {
 
     def static void main(def args) {
         def cli = new CliBuilder(usage: "gre [options] scriptfile")
         cli.k(argName: 'key', longOpt: 'key', args:1, required: false, 'SSH key to use when connection')
         cli.H(argName: 'host', longOpt: 'host', args:1, required: false, 'host to execute commands on')
+        cli.a(argName: 'argument', longOpt: 'argument', args: Option.UNLIMITED_VALUES, required: false, 'arguments passed to script')
         cli.p(argName: 'port', longOpt: 'port', args:1, required: false, 'port')
         cli.u(argName: 'user', longOpt: 'user', args:1, required: false, 'user')
-        cli.v('Verbose mode')
+        cli.v(argName: 'verbose', longOpt: 'verbose', 'Verbose mode')
         cli.h(argName: 'help', longOpt: 'help', required: false, 'display this help and exit')
         cli.version(argName: 'version', longOpt: 'version', required: false, 'display version and exit')
-
 
         def options = cli.parse(args)
         if (options) {
             def key
             def user
             def port
+            def arguments
             if (options.h) {
                 cli.usage()
                 System.exit(0)
@@ -33,7 +36,7 @@ class Gre {
             if (options.version) {
                 //TODO fix me
                 def version = Gre.class.package.implementationVersion
-                println("Gre version $version")
+                println("GRE version $version")
                 System.exit(0)
             }
 
@@ -68,6 +71,9 @@ class Gre {
                 System.exit(1)
             }
 
+            if (options.a) {
+                arguments = String.valueOf(options.a).split(" ")
+            }
 
             if (options.u) {
                 user = options.u
@@ -86,7 +92,7 @@ class Gre {
                 Script script = shell.parse(scriptFile)
                 greRuntime.init(options.H, port, user, key, options.v)
                 use(GreCategory) {
-                    script.run()
+                    script.run(scriptFile, arguments)
                 }
                 error = false
             } catch (UnknownHostException e) {

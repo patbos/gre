@@ -6,7 +6,7 @@
 
     <groupId>com.patbos.gre</groupId>
     <artifactId>gre</artifactId>
-    <version>1.0</version>
+    <version>0.1</version>
     <packaging>jar</packaging>
     <name>Groovy Remote Execution</name>
 
@@ -70,7 +70,9 @@
                     <archive>
                         <manifest>
                             <mainClass>com.patbos.gre.Gre</mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
+
                     </archive>
                 </configuration>
                 <executions>

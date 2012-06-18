@@ -22,5 +22,10 @@ class GreCategory {
         greRuntime.put(file, destination)
     }
 
+    def static println(Script script, Object output) {
+        def greRuntime = script.binding.getVariable("gre")
+        greRuntime.logScript(output)
+    }
+
 
 }

@@ -1,4 +1,3 @@
-gre
+GRE
 ===
-
-Groovy Remote Execution
+Groovy Remote Execution executes commands to remote servers using SSH

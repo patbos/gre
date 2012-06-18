@@ -169,6 +169,11 @@ class GreRuntime {
 
     }
 
+    def logScript(def message) {
+        log.logFromScript(host, message)
+    }
+
+
     /**
      *
      * b may be 0 for success,

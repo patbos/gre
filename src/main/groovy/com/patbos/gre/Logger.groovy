@@ -22,4 +22,8 @@ class Logger {
         println("$host verbose: $message")
     }
 
+    def logFromScript(def host, message) {
+        println("$host script: $message")
+    }
+
 }
