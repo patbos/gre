@@ -1,0 +1,19 @@
+apply plugin: 'groovy'
+
+version = 0.1
+group = 'com.patbos.gre'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.8.4'
+    compile group: 'com.jcraft', name: 'jsch', version: '0.1.48'
+    compile group: 'commons-cli', name: 'commons-cli', version: '1.2'
+}
+
+jar {
+    manifest { attributes 'Main-Class': 'com.patbos.gre.Gre' }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
