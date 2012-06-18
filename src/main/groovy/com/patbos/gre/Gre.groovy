@@ -36,7 +36,9 @@ class Gre {
             if (options.version) {
                 //TODO fix me
                 def version = Gre.class.package.implementationVersion
-                println("GRE version $version")
+                println("GRE version: $version")
+                def java = System.getProperty("java.version")
+                println("Java Version: $java")
                 System.exit(0)
             }
 
