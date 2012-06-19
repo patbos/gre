@@ -14,22 +14,29 @@ class GreRuntime {
     def verbose
     def log = new Logger()
 
-    def init(def host, port, username, key, verbose) {
+    def init(def host, port, username, key, password, verbose) {
         this.host = host
         this.verbose = verbose
         user = username
         ssh = new JSch()
 
         session = ssh.getSession(username, host, port)
-        ssh.addIdentity(key)
-
-        ssh.setHostKeyRepository(new NullHostKeyRepository())
-        if (verbose) {
-            log.logVerbose(host, "Connecting to $username@$host with key $key")
+        if (password) {
+            if (verbose) {
+                log.logVerbose(host, "Connecting to $username@$host with password")
+            }
+            session.setPassword(password)
+        } else {
+            if (verbose) {
+                log.logVerbose(host, "Connecting to $username@$host with key $key")
+            }
+            ssh.addIdentity(key)
         }
 
+        ssh.setHostKeyRepository(new NullHostKeyRepository())
+
         try {
-            session.connect(2000)
+            session.connect(20000)
         } catch (JSchException e) {
             if (e.cause instanceof UnknownHostException) {
                 throw e.cause
@@ -50,32 +57,53 @@ class GreRuntime {
 
 
     }
+
     def exec(def command) {
-        exec(command, true)
+        exec(command, true, true, false, null)
     }
 
-    def exec(def command, boolean throwError) {
+    def sudoExec(def command, def password) {
+        exec(command, true, false, true, password)
+    }
+
+    def exec(def command, boolean throwError, boolean logCommand, boolean sudo, def password) {
         ChannelExec channelExec = (ChannelExec) session.openChannel("exec")
-        channelExec.setCommand(command)
+        if (sudo) {
+            channelExec.setCommand("sudo -S -p '' $command")
+        } else {
+            channelExec.setCommand(command)
+        }
+
         InputStream input = channelExec.getInputStream()
-        InputStream error = channelExec.getErrStream();
+        InputStream error = channelExec.getErrStream()
+        OutputStream output = channelExec.getOutputStream()
+
+
         channelExec.connect()
+
+
         log.logCommand(host, command)
         def stdOut = new ArrayList<String>()
         def stdErr = new ArrayList<String>()
         def statusCode = -1;
         try {
+            if (sudo) {
+                output.write((password + "\n").bytes)
+                output.flush()
+            }
             while (true) {
+                while (error.available() > 0) {
+                    error.eachLine { line ->
+                        stdErr.add(line)
+                        if (logCommand)
+                            log.logStdErr(host, line)
+                    }
+                }
                 while (input.available() > 0) {
                     input.eachLine { line ->
                         stdOut.add(line)
-                        log.logStdOut(host, line)
-                    }
-                }
-                while (error.available() > 0) {
-                    error.eachLine { line ->
-                         stdErr.add(line)
-                        log.logStdErr(host, line)
+                        if (logCommand)
+                            log.logStdOut(host, line)
                     }
                 }
 
@@ -96,6 +124,9 @@ class GreRuntime {
                 }
             }
         } finally {
+            input.close()
+            error.close()
+            output.close()
             channelExec.disconnect()
         }
         return new ExecResult(stdErr: stdErr, stdOut: stdOut, exitCode: statusCode)
@@ -172,7 +203,6 @@ class GreRuntime {
     def logScript(def message) {
         log.logFromScript(host, message)
     }
-
 
     /**
      *

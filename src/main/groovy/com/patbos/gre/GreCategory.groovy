@@ -11,9 +11,14 @@ class GreCategory {
         greRuntime.exec(command)
     }
 
-    def static exec(Script script, String command, boolean throwException) {
+    def static exec(Script script, String command, boolean throwException, boolean log) {
         def greRuntime = script.binding.getVariable("gre")
-        greRuntime.exec(command, throwException)
+        greRuntime.exec(command, throwException, log, false, null)
+    }
+
+    def static sudoExec(Script script, String command, String password) {
+        def greRuntime = script.binding.getVariable("gre")
+        greRuntime.sudoExec(command, password)
     }
 
 
