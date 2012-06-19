@@ -7,8 +7,8 @@ class Gre {
     def static void main(def args) {
         def cli = new CliBuilder(usage: "gre [options] scriptfile")
         cli.k(argName: 'key', longOpt: 'key', args:1, required: false, 'SSH key to use when connection')
-        cli.H(argName: 'hosts', longOpt: 'host', args:Option.UNLIMITED_VALUES, valueSeparator: ',' as char, required: false, 'hosts to execute commands on')
-        cli.a(argName: 'argument', longOpt: 'argument', args: 1, required: false, 'arguments passed to script')
+        cli.H(argName: 'host', longOpt: 'host', args:Option.UNLIMITED_VALUES, valueSeparator: ',' as char, required: false, 'hosts to execute commands on')
+        cli.a(argName: 'arg', longOpt: 'arg', args: 1, required: false, 'arguments passed to script')
         cli.p(argName: 'port', longOpt: 'port', args:1, required: false, 'port')
         cli.u(argName: 'user', longOpt: 'user', args:1, required: false, 'user')
         cli.pw(argName: 'password', longOpt: 'user', required: false, 'password')
@@ -16,6 +16,7 @@ class Gre {
         cli.h(argName: 'help', longOpt: 'help', required: false, 'display this help and exit')
         cli.version(argName: 'version', longOpt: 'version', required: false, 'display version and exit')
         cli.post(argName: 'postscript', longOpt: 'postscript', args:1, required: false, 'postscript')
+        cli.hostfile(argName: 'hostfile', longOpt: 'hostfile', args:1, required: false, 'hostfile')
 
         def options = cli.parse(args)
         if (options) {
@@ -58,14 +59,6 @@ class Gre {
                 System.exit(0)
             }
 
-
-            if (!options.H) {
-                println("error: Missing required option: H")
-                cli.usage()
-                System.exit(1)
-            }
-
-
             if (options.arguments() == null || options.arguments().size() == 0 || options.arguments().size() > 1) {
                 println("error: Missing argument scriptfile")
                 cli.usage()
@@ -103,10 +96,31 @@ class Gre {
                 password = new String(System.console().readPassword("%s", "Password:") as char[])
             }
 
+            if (!options.H && !options.hostfile) {
+                println("error: Missing required option: H or hostfile")
+                cli.usage()
+                System.exit(1)
+            }
+
+
+            def hosts
+
+            if (options.hostfile) {
+                def hostfile = new File(options.hostfile)
+                if (!hostfile.exists()) {
+                    println("error: Could not read hostfile: $hostfile")
+                    System.exit(1)
+                }
+
+                hosts = hostfile.readLines();
+            } else {
+                hosts = options.Hs
+            }
+
 
             def result = new HashMap<String, Map>()
 
-            options.Hs.each { hostname ->
+            hosts.each { hostname ->
                 def greRuntime = new GreRuntime()
                 def error = true
 
