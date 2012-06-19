@@ -1,1 +1,0 @@
-exec("sudo apt-get updat")
