@@ -42,7 +42,7 @@ task deb(dependsOn: jar) << {
 
     exec {
         workingDir 'build'
-        commandLine "/usr/bin/fakeroot"
+        commandLine "fakeroot"
         args "dpkg-deb",  "--build", "debian", "gre-$version-all.deb"
     }
 
