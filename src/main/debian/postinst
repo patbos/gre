@@ -1,0 +1,2 @@
+#!/bin/sh
+ln -s /usr/local/gre/bin/gre /usr/bin/gre

@@ -1,6 +1,8 @@
+import org.apache.tools.ant.filters.*
+
 apply plugin: 'groovy'
 
-version = 0.1
+version = '0.1'
 group = 'com.patbos.gre'
 
 repositories {
@@ -20,4 +22,28 @@ jar {
     }
 
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+
+task deb(dependsOn: jar) << {
+    copy {
+        from 'src/main/debian'
+        into 'build/debian/DEBIAN'
+    }
+
+    File file = new File("build/debian/DEBIAN/control")
+    def text = file.text.replace("@version@", version)
+    file.text = text + "\n"
+
+    copy {
+        from 'build/libs/gre-0.1.jar'
+        rename '.*', 'gre.jar'
+        into "build/debian/usr/local"
+    }
+
+    exec {
+        workingDir 'build'
+        commandLine "/usr/bin/fakeroot"
+        args "dpkg-deb",  "--build", "debian", "gre-$version-all.deb"
+    }
+
 }

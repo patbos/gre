@@ -1,0 +1,9 @@
+Package: gre
+Version: @version@
+Section: base
+Priority: optional
+Architecture: all
+Maintainer: Patrik Boström <patbos@patbos.com>
+Description: Groovy Remote Execution
+Provides: gre
+Depends: jdk
