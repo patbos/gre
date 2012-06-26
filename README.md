@@ -7,8 +7,11 @@ Introduction
 ===
 Make sure that it is possible to login to remote server via ssh without giving password.
 Otherwise do this:
+
     ssh-keygen -t rsa
+
 to copy the keys to server
+
     ssh-copy-id -i ~/.ssh/id_rsa.pub user@machinename-or-ipaddress
 
 script.groovy
