@@ -85,4 +85,15 @@ class ScpUtil {
     }
 
 
+    /*
+    import static org.fusesource.jansi.Ansi.*
+
+
+for (int i = 1; i < 101; i++)  {
+
+    System.out.print( ansi().eraseLine(Erase.BACKWARD).cursorLeft(4) .render("$i %"))
+    Thread.currentThread().sleep(100);
+}
+System.out.println()
+     */
 }
