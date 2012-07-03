@@ -144,7 +144,7 @@ class GreRuntime {
             channel.connect();
 
             if (checkAck(inStream) != 0) {
-                throw new IOException("Failure tring to transfer file")
+                throw new IOException("Failure transfering file")
             }
 
             command = "T " + (file.lastModified() / 1000) + " 0";
@@ -153,7 +153,7 @@ class GreRuntime {
             command += (" " + (file.lastModified() / 1000) + " 0\n");
             outStream.write(command.getBytes()); outStream.flush();
             if (checkAck(inStream) != 0) {
-                throw new IOException("Failure tring to transfer file")
+                throw new IOException("Failure transfering file")
             }
 
             // send "C0644 filesize filename", where filename should not include '/'
@@ -168,7 +168,7 @@ class GreRuntime {
             command += "\n";
             outStream.write(command.getBytes()); outStream.flush();
             if (checkAck(inStream) != 0) {
-                throw new IOException("Failure tring to transfer file")
+                throw new IOException("Failure transfering file")
             }
 
             // send a content of lfile
@@ -185,7 +185,7 @@ class GreRuntime {
             outStream.write(buf, 0, 1);
             outStream.flush();
             if (checkAck(inStream) != 0) {
-                throw new IOException("Failure tring to transfer file")
+                throw new IOException("Failure transfering file")
             }
             log.logVerbose(host, "Transfered file $file to $user@$host:$destination successfully")
         } finally {
@@ -193,11 +193,102 @@ class GreRuntime {
                 outStream.close()
             }
             if (channel != null) {
-                channel.disconnect();
+                channel.disconnect()
             }
         }
+    }
+
+    def get(def remote, File local) {
+        def command = "scp -f $remote"
+        def channel = session.openChannel("exec")
+        channel.setCommand(command)
+        OutputStream outStream = channel.getOutputStream()
+        InputStream inStream = channel.getInputStream()
+        FileOutputStream fos = null
+        try {
+            channel.connect()
 
 
+            byte[] buf = new byte[1024]
+
+            // send '\0'
+            buf[0] = 0; outStream.write(buf, 0, 1)
+            outStream.flush()
+
+            while (true) {
+                int c = checkAck(inStream)
+                if (c != 'C') {
+                    break;
+                }
+
+                // read '0644 '
+                inStream.read(buf, 0, 5);
+
+                long fileSize = 0L;
+                while (true) {
+                    if (inStream.read(buf, 0, 1) < 0) {
+                        // error
+                        break
+                    }
+                    if (buf[0] == ' ') break;
+                    fileSize = fileSize * 10L + (long) (buf[0] - '0');
+                }
+
+                String file = null;
+                for (int i = 0; ; i++) {
+                    inStream.read(buf, i, 1);
+                    if (buf[i] == (byte) 0x0a) {
+                        file = new String(buf, 0, i);
+                        break;
+                    }
+                }
+
+                //System.out.println("filesize="+filesize+", file="+file);
+
+                // send '\0'
+                buf[0] = 0; outStream.write(buf, 0, 1)
+                outStream.flush()
+
+                // read a content of lfile
+                fos = new FileOutputStream(local)
+                int foo;
+                while (true) {
+                    if (buf.length < fileSize) foo = buf.length
+                    else foo = (int) fileSize
+                    foo = inStream.read(buf, 0, foo)
+                    if (foo < 0) {
+                        // error
+                        break;
+                    }
+                    fos.write(buf, 0, foo);
+                    fileSize -= foo;
+                    if (fileSize == 0L) break;
+                }
+
+                if (checkAck(inStream) != 0) {
+                    throw new IOException("Failure transfering file")
+                }
+
+                // send '\0'
+                buf[0] = 0; outStream.write(buf, 0, 1);
+                outStream.flush();
+            }
+
+
+        } finally {
+            if (outStream != null) {
+                outStream.close()
+            }
+            if (inStream != null) {
+                inStream.close()
+            }
+            if (fos != null) {
+                fos.close()
+            }
+            if (channel != null) {
+                channel.disconnect()
+            }
+        }
     }
 
     def logScript(def message) {
