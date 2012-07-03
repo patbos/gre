@@ -4,7 +4,7 @@ import com.jcraft.jsch.Session
 
 class ScpUtil {
 
-    def static put(Session session, File file, def destination) {
+    def static put(Logger log, Session session, File file, def destination) {
         def channel = session.openChannel("exec");
         channel.setCommand("scp -t -p $destination");
         OutputStream output = channel.getOutputStream()
@@ -15,9 +15,19 @@ class ScpUtil {
             waitForAck(input)
             fis = new FileInputStream(file)
             def length = file.length()
-            output.write("C0644 $length $file.name\n".bytes)
+            long lastmodified = file.lastModified() / 1000
+
+            output.write("T $lastmodified 0 $lastmodified 0\n".toString().bytes)
             output.flush()
             waitForAck(input)
+
+
+            output.write("C0644 $length $file.name\n".toString().bytes)
+            output.flush()
+            waitForAck(input)
+
+            int percentTransmitted = 0
+            long totalLength = 0
 
             byte[] buf = new byte[1024];
             while (true) {
@@ -26,6 +36,8 @@ class ScpUtil {
                     break;
                 }
                 output.write(buf, 0, len);
+                totalLength += len
+                percentTransmitted = log.logProgress((int) totalLength/length * 100, percentTransmitted)
             }
             output.flush();
             sendAck(output);

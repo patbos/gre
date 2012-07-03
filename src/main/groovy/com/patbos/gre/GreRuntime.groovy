@@ -11,25 +11,21 @@ class GreRuntime {
     def session
     def host
     def user
-    def verbose
-    def log = new Logger()
+    def log
 
-    def init(def host, port, username, key, password, verbose) {
+    def init(def log, host, port, username, key, password) {
         this.host = host
-        this.verbose = verbose
         user = username
         ssh = new JSch()
+        this.log = log;
+
 
         session = ssh.getSession(username, host, port)
         if (password) {
-            if (verbose) {
-                log.logVerbose(host, "Connecting to $username@$host with password")
-            }
+            log.logVerbose(host, "Connecting to $username@$host with password")
             session.setPassword(password)
         } else {
-            if (verbose) {
-                log.logVerbose(host, "Connecting to $username@$host with key $key")
-            }
+            log.logVerbose(host, "Connecting to $username@$host with key $key")
             ssh.addIdentity(key)
         }
 
@@ -51,9 +47,7 @@ class GreRuntime {
 
             throw e
         }
-        if (verbose) {
-            log.logVerbose(host, "Connected")
-        }
+        log.logVerbose(host, "Connected")
 
 
     }
@@ -134,68 +128,7 @@ class GreRuntime {
     }
 
     def put(File file, def destination) {
-        def command = "scp -p -t $destination"
-        def channel = session.openChannel("exec")
-        channel.setCommand(command)
-        OutputStream outStream = channel.getOutputStream()
-        InputStream inStream = channel.getInputStream()
-        try {
-            log.logVerbose(host, "Transfering file $file to $user@$host:$destination")
-            channel.connect();
-
-            if (checkAck(inStream) != 0) {
-                throw new IOException("Failure transfering file")
-            }
-
-            command = "T " + (file.lastModified() / 1000) + " 0";
-            // The access time should be sent here,
-            // but it is not accessible with JavaAPI ;-<
-            command += (" " + (file.lastModified() / 1000) + " 0\n");
-            outStream.write(command.getBytes()); outStream.flush();
-            if (checkAck(inStream) != 0) {
-                throw new IOException("Failure transfering file")
-            }
-
-            // send "C0644 filesize filename", where filename should not include '/'
-            long filesize = file.length();
-            command = "C0644 " + filesize + " ";
-            if (destination.lastIndexOf('/') > 0) {
-                command += destination.substring(destination.lastIndexOf('/') + 1);
-            }
-            else {
-                command += destination;
-            }
-            command += "\n";
-            outStream.write(command.getBytes()); outStream.flush();
-            if (checkAck(inStream) != 0) {
-                throw new IOException("Failure transfering file")
-            }
-
-            // send a content of lfile
-            def fis = new FileInputStream(file);
-            byte[] buf = new byte[1024];
-            while (true) {
-                int len = fis.read(buf, 0, buf.length);
-                if (len <= 0) break;
-                outStream.write(buf, 0, len); //out.flush();
-            }
-            fis.close();
-            // send '\0'
-            buf[0] = 0;
-            outStream.write(buf, 0, 1);
-            outStream.flush();
-            if (checkAck(inStream) != 0) {
-                throw new IOException("Failure transfering file")
-            }
-            log.logVerbose(host, "Transfered file $file to $user@$host:$destination successfully")
-        } finally {
-            if (outStream != null) {
-                outStream.close()
-            }
-            if (channel != null) {
-                channel.disconnect()
-            }
-        }
+        ScpUtil.put(log, session, file, destination)
     }
 
     def get(def remote, File local) {
@@ -319,14 +252,10 @@ class GreRuntime {
 
 
     def close() {
-        if (verbose) {
-            log.logVerbose(host, "Disconnecting")
-        }
+        log.logVerbose(host, "Disconnecting")
         if (session)
             session.disconnect()
-        if (verbose) {
-            log.logVerbose(host, "Disconnected")
-        }
+        log.logVerbose(host, "Disconnected")
     }
 
 }

@@ -1,10 +1,12 @@
 package com.patbos.gre
 
 import org.apache.commons.cli.Option
+import org.fusesource.jansi.AnsiConsole
 
 class Gre {
 
     def static void main(def args) {
+        AnsiConsole.systemInstall();
         def cli = new CliBuilder(usage: "gre [options] scriptfile")
         cli.k(argName: 'key', longOpt: 'key', args:1, required: false, 'SSH key to use when connection')
         cli.H(argName: 'host', longOpt: 'host', args:Option.UNLIMITED_VALUES, valueSeparator: ',' as char, required: false, 'hosts to execute commands on')
@@ -13,10 +15,15 @@ class Gre {
         cli.u(argName: 'user', longOpt: 'user', args:1, required: false, 'user')
         cli.pw(argName: 'password', longOpt: 'user', required: false, 'password')
         cli.v(argName: 'verbose', longOpt: 'verbose', 'Verbose mode')
+        cli.vv(argName: 'veryverbose', longOpt: 'veryverbose', 'Very verbose mode')
         cli.h(argName: 'help', longOpt: 'help', required: false, 'display this help and exit')
         cli.version(argName: 'version', longOpt: 'version', required: false, 'display version and exit')
         cli.post(argName: 'postscript', longOpt: 'postscript', args:1, required: false, 'postscript')
         cli.hostfile(argName: 'hostfile', longOpt: 'hostfile', args:1, required: false, 'hostfile')
+        cli.d(argName: 'debug', longOpt: 'debug', required: false, 'Produce execution debug output')
+        cli.nc(argName: 'nc', longOpt: 'no-color', required: false, 'Do not use color in the console output.')
+
+        def log = new Logger();
 
         def options = cli.parse(args)
         if (options) {
@@ -26,6 +33,19 @@ class Gre {
             def arguments
             def password
             def postScriptFile = null
+
+            if (options.v) {
+                log.verbose = true
+            }
+
+            if (options.d) {
+                log.debug = true
+            }
+
+            if (options.nc) {
+                log.noColor = true
+            }
+
             if (options.h) {
                 cli.usage()
                 System.exit(0)
@@ -131,7 +151,7 @@ class Gre {
                     binding.setVariable("greResult", hostResult)
                     def shell = new GroovyShell(binding)
                     Script script = shell.parse(scriptFile)
-                    greRuntime.init(hostname, port, user, key,password, options.v)
+                    greRuntime.init(log, hostname, port, user, key,password)
                     use(GreCategory) {
                         script.run(scriptFile, arguments)
                     }
