@@ -143,6 +143,7 @@ class Gre {
             hosts.each { hostname ->
                 def greRuntime = new GreRuntime()
                 def error = true
+                def scriptClass = null
 
                 try {
                     def hostResult = new HashMap()
@@ -151,6 +152,8 @@ class Gre {
                     binding.setVariable("greResult", hostResult)
                     def shell = new GroovyShell(binding)
                     Script script = shell.parse(scriptFile)
+                    scriptClass = script.class.name
+                    log.logDebug(user, hostname, "Script class is " + script.class)
                     greRuntime.init(log, hostname, port, user, key,password)
                     use(GreCategory) {
                         script.run(scriptFile, arguments)
@@ -166,7 +169,12 @@ class Gre {
                 } catch (AuthenticationException e) {
                     println("Authentication failed")
                 } catch (ExecutionException e) {
-                    println("Error executing script: $e.message")
+                    def element = getLocation(log, e, scriptClass)
+                    if (element) {
+                        println("Error executing script $scriptFile at line $element.lineNumber:  $e.message")
+                    } else {
+                        println("Error executing script: $e.message")
+                    }
                 } catch (Exception e) {
                     println("Unknown Error")
                     e.printStackTrace()
@@ -186,6 +194,13 @@ class Gre {
             }
         } else {
             System.exit(1)
+        }
+    }
+
+
+    def static getLocation(def log, Throwable e, def className) {
+        e.stackTrace.find { StackTraceElement element ->
+            element.className.equals(className)
         }
     }
 }

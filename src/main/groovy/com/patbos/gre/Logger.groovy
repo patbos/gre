@@ -58,4 +58,14 @@ class Logger {
         return percent
     }
 
+    def logDebug(def user, host, message) {
+        if (debug)
+            println("[$user@$host]  debug: $message")
+    }
+
+    def logDebug(def message) {
+        if (debug)
+            println("debug: $message")
+    }
+
 }
