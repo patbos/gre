@@ -161,22 +161,22 @@ class Gre {
                     error = false
                     result.put(hostname, hostResult)
                 } catch (UnknownHostException e) {
-                    println("Unknown host: $options.H")
+                    log.logError(user, hostname, "Unknown host: $options.H")
                 } catch (MissingPropertyException e) {
-                    println("Script error: $e.message")
+                    log.logError(user, hostname, "Script error: $e.message")
                 } catch (MissingMethodException e) {
-                    println("Script error: $e.message")
+                    log.logError(user, hostname, "Script error: $e.message")
                 } catch (AuthenticationException e) {
-                    println("Authentication failed")
+                    log.logError(user, hostname, "Authentication failed")
                 } catch (ExecutionException e) {
                     def element = getLocation(log, e, scriptClass)
                     if (element) {
-                        println("Error executing script $scriptFile at line $element.lineNumber:  $e.message")
+                        log.logError(user, hostname, "Error executing script $scriptFile at line $element.lineNumber:  $e.message")
                     } else {
-                        println("Error executing script: $e.message")
+                        log.logError(user, hostname, "Error executing script: $e.message")
                     }
                 } catch (Exception e) {
-                    println("Unknown Error")
+                    log.logError(user, hostname, "Unknown Error")
                     e.printStackTrace()
                 } finally {
                     greRuntime.close()

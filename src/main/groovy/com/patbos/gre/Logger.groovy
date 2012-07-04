@@ -68,4 +68,9 @@ class Logger {
             println("debug: $message")
     }
 
+    def logError(def user, host, message) {
+        println("[$user@$host]   error: $message")
+    }
+
+
 }
