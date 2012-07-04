@@ -4,7 +4,7 @@ import com.jcraft.jsch.Session
 
 class ScpUtil {
 
-    def static put(Logger log, Session session, File file, def destination) {
+    def static put(def user, def host, Logger log, Session session, File file, def destination) {
         def channel = session.openChannel("exec");
         channel.setCommand("scp -t -p $destination");
         OutputStream output = channel.getOutputStream()
@@ -13,6 +13,7 @@ class ScpUtil {
         try {
             channel.connect()
             waitForAck(input)
+            log.logVerbose(user, host, "Transfering file $file to $host:$destination")
             fis = new FileInputStream(file)
             def length = file.length()
             long lastmodified = file.lastModified() / 1000

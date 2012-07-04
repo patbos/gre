@@ -13,29 +13,29 @@ class Logger {
         AnsiConsole.systemInstall();
     }
 
-    def logStdOut(def host, line) {
-        AnsiConsole.out.println("$host stdout: $line")
+    def logStdOut(def user, host, line) {
+        AnsiConsole.out.println("[$user@$host]  stdout: $line")
     }
 
-    def logStdErr(def host, line) {
-        println("$host stderr: $line")
+    def logStdErr(def user, host, line) {
+        println("[$user@$host]  stderr: $line")
     }
 
-    def logCommand(def host, command) {
-        println("$host command: $command")
+    def logCommand(def user, host, command) {
+        println("[$user@$host] command: $command")
     }
 
-    def logCommandStatus(def host, command, int status) {
-        println("$host command: $command executed with status $status")
+    def logCommandStatus(def user, host, command, int status) {
+        println("[$user@$host]  status: $command executed with status $status")
     }
 
-    def logVerbose(def host, message) {
+    def logVerbose(def user, host, message) {
         if (verbose)
-            println("$host verbose: $message")
+            println("[$user@$host] verbose: $message")
     }
 
-    def logFromScript(def host, message) {
-        println("$host script: $message")
+    def logFromScript(def user, host, message) {
+        println("[$user@$host] script: $message")
     }
 
     def logProgress(int percent, oldPercent) {

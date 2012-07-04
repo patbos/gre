@@ -22,10 +22,10 @@ class GreRuntime {
 
         session = ssh.getSession(username, host, port)
         if (password) {
-            log.logVerbose(host, "Connecting to $username@$host with password")
+            log.logVerbose(username, host, "Connecting to $username@$host with password")
             session.setPassword(password)
         } else {
-            log.logVerbose(host, "Connecting to $username@$host with key $key")
+            log.logVerbose(username, host, "Connecting to $username@$host with key $key")
             ssh.addIdentity(key)
         }
 
@@ -47,7 +47,7 @@ class GreRuntime {
 
             throw e
         }
-        log.logVerbose(host, "Connected")
+        log.logVerbose(username, host, "Connected")
 
 
     }
@@ -76,7 +76,7 @@ class GreRuntime {
         channelExec.connect()
 
 
-        log.logCommand(host, command)
+        log.logCommand(user, host, command)
         def stdOut = new ArrayList<String>()
         def stdErr = new ArrayList<String>()
         def statusCode = -1;
@@ -90,21 +90,20 @@ class GreRuntime {
                     error.eachLine { line ->
                         stdErr.add(line)
                         if (logCommand)
-                            log.logStdErr(host, line)
+                            log.logStdErr(user, host, line)
                     }
                 }
                 while (input.available() > 0) {
                     input.eachLine { line ->
                         stdOut.add(line)
                         if (logCommand)
-                            log.logStdOut(host, line)
+                            log.logStdOut(user, host, line)
                     }
                 }
 
                 if (channelExec.isClosed()) {
                     statusCode = channelExec.getExitStatus();
-                    if (verbose)
-                        log.logCommandStatus(host, command, statusCode)
+                    log.logCommandStatus(user, host, command, statusCode)
                     if (throwError && statusCode != 0) {
                         throw new ExecutionException("Error executing '$command'")
                     }
@@ -128,7 +127,7 @@ class GreRuntime {
     }
 
     def put(File file, def destination) {
-        ScpUtil.put(log, session, file, destination)
+        ScpUtil.put(user, host, log, session, file, destination)
     }
 
     def get(def remote, File local) {
@@ -225,7 +224,7 @@ class GreRuntime {
     }
 
     def logScript(def message) {
-        log.logFromScript(host, message)
+        log.logFromScript(user, host, message)
     }
 
     /**
@@ -252,10 +251,10 @@ class GreRuntime {
 
 
     def close() {
-        log.logVerbose(host, "Disconnecting")
+        log.logVerbose(user, host, "Disconnecting")
         if (session)
             session.disconnect()
-        log.logVerbose(host, "Disconnected")
+        log.logVerbose(user, host, "Disconnected")
     }
 
 }
