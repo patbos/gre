@@ -25,8 +25,8 @@ jar {
 
 task deb(dependsOn: jar) << {
     copy {
-        from 'src/main/debian'
-        into 'build/debian/DEBIAN'
+        from 'src/main/debian/'
+        into 'build/debian/'
     }
 
     File file = new File("build/debian/DEBIAN/control")
@@ -34,13 +34,8 @@ task deb(dependsOn: jar) << {
     file.text = text + "\n"
 
     copy {
-        from 'build/libs/gre-0.1.jar'
+        from 'build/libs/gre-0.2.jar'
         rename '.*', 'gre.jar'
-        into "build/debian/usr/local/gre"
-    }
-
-    copy {
-        from 'src/main/script/'
         into "build/debian/usr/local/gre"
     }
 
