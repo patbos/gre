@@ -1,2 +1,1 @@
-exec("ls -la")
-exec("ls -la .ssh")
+exec("cat /proc/cpuinfo |grep processor|wc -l")

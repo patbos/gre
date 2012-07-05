@@ -7,20 +7,21 @@ class Gre {
 
     def static void main(def args) {
         def cli = new CliBuilder(usage: "gre [options] commandscript")
-        cli.k(argName: 'key', longOpt: 'key', args:1, required: false, 'SSH key to use when connection')
-        cli.H(argName: 'host', longOpt: 'host', args:Option.UNLIMITED_VALUES, valueSeparator: ',' as char, required: false, 'hosts to execute commands on')
+        cli.k(argName: 'key', longOpt: 'key', args: 1, required: false, 'SSH key to use when connection')
+        cli.H(argName: 'host', longOpt: 'host', args: Option.UNLIMITED_VALUES, valueSeparator: ',' as char, required: false, 'hosts to execute commands on')
         cli.a(argName: 'arg', longOpt: 'arg', args: 1, required: false, 'arguments passed to scripts')
-        cli.p(argName: 'port', longOpt: 'port', args:1, required: false, 'port SSH port to use when connection to hosts')
-        cli.u(argName: 'user', longOpt: 'user', args:1, required: false, 'user for logging in to hosts')
+        cli.p(argName: 'port', longOpt: 'port', args: 1, required: false, 'port SSH port to use when connection to hosts')
+        cli.u(argName: 'user', longOpt: 'user', args: 1, required: false, 'user for logging in to hosts')
         cli.pw(argName: 'password', longOpt: 'user', required: false, 'password prompt for password')
         cli.v(argName: 'verbose', longOpt: 'verbose', 'Verbose mode')
         cli.h(argName: 'help', longOpt: 'help', required: false, 'display this help and exit')
         cli.version(argName: 'version', longOpt: 'version', required: false, 'display version and exit')
-        cli.post(argName: 'postscript', longOpt: 'postscript', args:1, required: false, 'postscript to be executed when all hosts has executed script')
-        cli.pre(argName: 'prescript', longOpt: 'prescript', args:1, required: false, 'prescript to be executed first to return a list of server to execute command script')
-        cli.hostfile(argName: 'hostfile', longOpt: 'hostfile', args:1, required: false, 'hostfile file containing a hostname on each row')
+        cli.post(argName: 'postscript', longOpt: 'postscript', args: 1, required: false, 'postscript to be executed when all hosts has executed script')
+        cli.pre(argName: 'prescript', longOpt: 'prescript', args: 1, required: false, 'prescript to be executed first to return a list of server to execute command script')
+        cli.hostfile(argName: 'hostfile', longOpt: 'hostfile', args: 1, required: false, 'hostfile file containing a hostname on each row')
         cli.d(argName: 'debug', longOpt: 'debug', required: false, 'Produce execution debug output')
         cli.nc(argName: 'nc', longOpt: 'no-color', required: false, 'Do not use color in the console output.')
+        cli.T(argName: 'timeout', longOpt: 'timeout', args: 1, required: false, 'Connection timeout in seconds')
 
         def log = new Logger();
 
@@ -32,6 +33,8 @@ class Gre {
             def arguments
             def password
             def postScriptFile = null
+            int timeout = 20
+
 
             if (options.v) {
                 log.verbose = true
@@ -40,6 +43,18 @@ class Gre {
             if (options.d) {
                 log.debug = true
             }
+
+            if (options.T) {
+                try {
+                    timeout = Integer.parseInt(options.T)
+                    log.logDebug("Setting timeout to $timeout seconds")
+                } catch (NumberFormatException e) {
+                    println("error: Could not understand option: T value $options.T")
+                    cli.usage()
+                    System.exit(1)
+                }
+            }
+
 
             if (options.nc) {
                 log.noColor = true
@@ -148,7 +163,7 @@ class Gre {
                 Binding binding = new Binding()
                 binding.setProperty("args", arguments)
                 def shell = new GroovyShell(binding)
-                def script =  shell.parse(preScriptFile)
+                def script = shell.parse(preScriptFile)
                 hosts = script.run()
             }
 
@@ -169,8 +184,8 @@ class Gre {
                     def shell = new GroovyShell(binding)
                     Script script = shell.parse(scriptFile)
                     scriptClass = script.class.name
-                    log.logDebug(user, hostname, "Script class is " + script.class)
-                    greRuntime.init(log, hostname, port, user, key,password)
+                    log.logDebug(user, hostname, "Script class is $scriptClass")
+                    greRuntime.init(log, hostname, port, user, key, password, timeout)
                     use(GreCategory) {
                         script.run(scriptFile, arguments)
                     }
@@ -197,7 +212,7 @@ class Gre {
                 } finally {
                     greRuntime.close()
                 }
-                if (error){
+                if (error) {
                     System.exit(1)
                 }
             }

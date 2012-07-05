@@ -13,7 +13,7 @@ class GreRuntime {
     def user
     def log
 
-    def init(def log, host, port, username, key, password) {
+    def init(def log, host, port, username, key, password, int timeout) {
         this.host = host
         user = username
         ssh = new JSch()
@@ -32,7 +32,7 @@ class GreRuntime {
         ssh.setHostKeyRepository(new NullHostKeyRepository())
 
         try {
-            session.connect(20000)
+            session.connect(timeout * 1000)
         } catch (JSchException e) {
             if (e.cause instanceof UnknownHostException) {
                 throw e.cause
