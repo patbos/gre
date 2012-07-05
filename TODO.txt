@@ -2,3 +2,4 @@
 * Get scp support
 * DSL for executing commands
 * Fix key validation
+* Logging from script

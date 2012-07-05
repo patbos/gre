@@ -38,5 +38,4 @@ class GreCategory {
         greRuntime.logScript(output)
     }
 
-
 }
