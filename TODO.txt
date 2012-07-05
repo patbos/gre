@@ -3,3 +3,4 @@
 * DSL for executing commands
 * Fix key validation
 * Logging from script
+* Improve error handling
