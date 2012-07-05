@@ -1,4 +1,3 @@
-* Timeout support
 * Get scp support
 * DSL for executing commands
 * Fix key validation

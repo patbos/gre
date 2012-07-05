@@ -2,6 +2,7 @@ package com.patbos.gre
 
 import org.apache.commons.cli.Option
 import org.fusesource.jansi.AnsiConsole
+import org.codehaus.groovy.control.CompilationFailedException
 
 class Gre {
 
@@ -182,12 +183,35 @@ class Gre {
                     binding.setVariable("gre", greRuntime)
                     binding.setVariable("greResult", hostResult)
                     def shell = new GroovyShell(binding)
-                    Script script = shell.parse(scriptFile)
+                    Script script
+                    try {
+                        log.logDebug("About to parse script")
+                        script = shell.parse(scriptFile)
+                        log.logDebug("Script parsed")
+                    } catch (IOException e) {
+                        log.logError(user, hostname, "Error reading $scriptFile")
+                        System.exit(1)
+                    } catch (CompilationFailedException e) {
+                        log.logError(user, hostname, "Complilation failed $e")
+                        System.exit(1)
+                    }
                     scriptClass = script.class.name
                     log.logDebug(user, hostname, "Script class is $scriptClass")
                     greRuntime.init(log, hostname, port, user, key, password, timeout)
                     use(GreCategory) {
-                        script.run(scriptFile, arguments)
+                        try {
+                            script.run(scriptFile, arguments)
+                        } catch (ExecutionException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            def element = getLocation(log, e, scriptClass)
+                            if (element) {
+                                log.logError(user, hostname, "Error executing script $scriptFile at line $element.lineNumber:  $e.message")
+                            } else {
+                                log.logError(user, hostname, "Error executing script: $e.message")
+                            }
+                            error = true
+                        }
                     }
                     error = false
                     result.put(hostname, hostResult)
