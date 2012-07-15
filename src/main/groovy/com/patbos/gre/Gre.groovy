@@ -17,8 +17,6 @@ class Gre {
         cli.v(argName: 'verbose', longOpt: 'verbose', 'Verbose mode')
         cli.h(argName: 'help', longOpt: 'help', required: false, 'display this help and exit')
         cli.version(argName: 'version', longOpt: 'version', required: false, 'display version and exit')
-        //cli.post(argName: 'postscript', longOpt: 'postscript', args: 1, required: false, 'postscript to be executed when all hosts has executed script')
-        //cli.pre(argName: 'prescript', longOpt: 'prescript', args: 1, required: false, 'prescript to be executed first to return a list of server to execute command script')
         cli.hostfile(argName: 'hostfile', longOpt: 'hostfile', args: 1, required: false, 'hostfile file containing a hostname on each row')
         cli.d(argName: 'debug', longOpt: 'debug', required: false, 'Produce execution debug output')
         cli.nc(argName: 'nc', longOpt: 'no-color', required: false, 'Do not use color in the console output.')
@@ -33,7 +31,6 @@ class Gre {
             def port
             def arguments
             def password
-            def postScriptFile = null
             int timeout = 20
 
 
@@ -66,14 +63,6 @@ class Gre {
             if (options.h) {
                 cli.usage()
                 System.exit(0)
-            }
-
-            if (options.post) {
-                postScriptFile = new File(options.post)
-                if (!postScriptFile.exists()) {
-                    println("Could not find post script file: $postScriptFile")
-                    System.exit(1)
-                }
             }
 
             if (options.p) {
@@ -155,19 +144,6 @@ class Gre {
                 hosts = options.Hs
             }
 
-            /*if (options.pre) {
-                def preScriptFile = new File(options.pre)
-                if (!preScriptFile.exists()) {
-                    println("error: Could not read prescript: $preScriptFile")
-                    System.exit(1)
-                }
-                Binding binding = new Binding()
-                binding.setProperty("args", arguments)
-                def shell = new GroovyShell(binding)
-                def script = shell.parse(preScriptFile)
-                hosts = script.run()
-            }*/
-
             def shell = new GroovyShell()
             Script script = null
             try {
@@ -212,7 +188,6 @@ class Gre {
                     greRuntime.init(log, hostname, port, user, key, password, timeout)
                     use(GreCategory) {
                         try {
-                            //script.run(scriptFile, arguments)
                             script.binding = binding
                             script.invokeMethod("execute", null)
                         } catch (ExecutionException e) {
@@ -260,14 +235,6 @@ class Gre {
                 script.binding = binding
                 script.invokeMethod("post", null)
             }
-
-            /*if (postScriptFile) {
-                def binding = new Binding()
-                binding.setVariable("greResult", result)
-                def shell = new GroovyShell(binding)
-                Script script = shell.parse(postScriptFile)
-                script.run()
-            }*/
         } else {
             System.exit(1)
         }
