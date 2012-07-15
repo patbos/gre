@@ -1,3 +1,15 @@
+@Grab(group='org.yaml', module='snakeyaml', version='1.10')
+import org.yaml.snakeyaml.*
+
 def execute() {
-    exec("cat /proc/cpuinfo |grep processor|wc -l")
+    Yaml yaml = new Yaml();
+    def map = yaml.load(exec("facter --yaml").stdOut)
+    greResult.put("swapsize", map.get("swapsize"));
+}
+
+def post() {
+    greResult.each { key, value ->
+        println("$key $value")
+
+    }
 }

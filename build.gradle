@@ -12,6 +12,7 @@ dependencies {
     compile group: 'com.jcraft', name: 'jsch', version: '0.1.48'
     compile group: 'commons-cli', name: 'commons-cli', version: '1.2'
     compile group: 'org.fusesource.jansi', name: 'jansi', version: '1.9'
+    compile 'org.apache.ivy:ivy:2.2.0'
 }
 
 jar {

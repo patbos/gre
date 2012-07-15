@@ -11,7 +11,7 @@ class GreRuntime {
     def session
     def host
     def user
-    def log
+    Logger log
 
     def init(def log, host, port, username, key, password, int timeout) {
         this.host = host
@@ -77,8 +77,8 @@ class GreRuntime {
 
 
         log.logCommand(user, host, command)
-        def stdOut = new ArrayList<String>()
-        def stdErr = new ArrayList<String>()
+        def stdOut = new StringBuilder()
+        def stdErr = new StringBuilder()
         def statusCode = -1;
         try {
             if (sudo) {
@@ -88,15 +88,15 @@ class GreRuntime {
             while (true) {
                 while (error.available() > 0) {
                     error.eachLine { line ->
-                        stdErr.add(line)
-                        if (logCommand)
+                        stdErr.append(line + "\n")
+                        if (logCommand || log.verbose)
                             log.logStdErr(user, host, line)
                     }
                 }
                 while (input.available() > 0) {
                     input.eachLine { line ->
-                        stdOut.add(line)
-                        if (logCommand)
+                        stdOut.append(line + "\n")
+                        if (logCommand || log.verbose)
                             log.logStdOut(user, host, line)
                     }
                 }

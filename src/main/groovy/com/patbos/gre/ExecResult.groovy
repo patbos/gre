@@ -1,7 +1,7 @@
 package com.patbos.gre
 
 class ExecResult {
-    List stdOut
-    List stdErr
+    String stdOut
+    String stdErr
     int exitCode
 }
