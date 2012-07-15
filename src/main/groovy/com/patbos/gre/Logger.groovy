@@ -3,7 +3,7 @@ package com.patbos.gre
 import org.fusesource.jansi.AnsiConsole
 import org.fusesource.jansi.Ansi
 
-class Logger {
+class Logger implements com.jcraft.jsch.Logger {
 
     boolean verbose = false
     boolean debug = false
@@ -72,5 +72,13 @@ class Logger {
         println("[$user@$host]   error: $message")
     }
 
+    @Override
+    boolean isEnabled(int level) {
+        return debug
+    }
 
+    @Override
+    void log(int level, String message) {
+        println("ssh  : $message")
+    }
 }

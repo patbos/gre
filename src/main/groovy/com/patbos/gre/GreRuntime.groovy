@@ -16,6 +16,7 @@ class GreRuntime {
     def init(def log, host, port, username, key, password, int timeout) {
         this.host = host
         user = username
+        JSch.setLogger(log)
         ssh = new JSch()
         this.log = log;
 
