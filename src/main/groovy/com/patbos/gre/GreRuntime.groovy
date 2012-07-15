@@ -175,8 +175,6 @@ class GreRuntime {
                     }
                 }
 
-                //System.out.println("filesize="+filesize+", file="+file);
-
                 // send '\0'
                 buf[0] = 0; outStream.write(buf, 0, 1)
                 outStream.flush()

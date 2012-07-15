@@ -17,8 +17,8 @@ class Gre {
         cli.v(argName: 'verbose', longOpt: 'verbose', 'Verbose mode')
         cli.h(argName: 'help', longOpt: 'help', required: false, 'display this help and exit')
         cli.version(argName: 'version', longOpt: 'version', required: false, 'display version and exit')
-        cli.post(argName: 'postscript', longOpt: 'postscript', args: 1, required: false, 'postscript to be executed when all hosts has executed script')
-        cli.pre(argName: 'prescript', longOpt: 'prescript', args: 1, required: false, 'prescript to be executed first to return a list of server to execute command script')
+        //cli.post(argName: 'postscript', longOpt: 'postscript', args: 1, required: false, 'postscript to be executed when all hosts has executed script')
+        //cli.pre(argName: 'prescript', longOpt: 'prescript', args: 1, required: false, 'prescript to be executed first to return a list of server to execute command script')
         cli.hostfile(argName: 'hostfile', longOpt: 'hostfile', args: 1, required: false, 'hostfile file containing a hostname on each row')
         cli.d(argName: 'debug', longOpt: 'debug', required: false, 'Produce execution debug output')
         cli.nc(argName: 'nc', longOpt: 'no-color', required: false, 'Do not use color in the console output.')
@@ -155,7 +155,7 @@ class Gre {
                 hosts = options.Hs
             }
 
-            if (options.pre) {
+            /*if (options.pre) {
                 def preScriptFile = new File(options.pre)
                 if (!preScriptFile.exists()) {
                     println("error: Could not read prescript: $preScriptFile")
@@ -166,24 +166,38 @@ class Gre {
                 def shell = new GroovyShell(binding)
                 def script = shell.parse(preScriptFile)
                 hosts = script.run()
+            }*/
+
+            def shell = new GroovyShell()
+            Script script = null
+            try {
+                log.logDebug("About to parse script")
+                script = shell.parse(scriptFile)
+                log.logDebug("Script parsed")
+            } catch (IOException e) {
+                println("Error reading $scriptFile")
+                System.exit(1)
+            } catch (CompilationFailedException e) {
+                println("Complilation failed $e")
+                System.exit(1)
             }
-
-
+            def scriptClass = script.class.name
+            if (!script.metaClass.respondsTo(script, "execute")) {
+                println("No execute method found!")
+                System.exit(1)
+            }
 
             def result = new HashMap<String, Map>()
 
             hosts.each { hostname ->
                 def greRuntime = new GreRuntime()
                 def error = true
-                def scriptClass = null
 
                 try {
                     def hostResult = new HashMap()
                     def binding = new Binding()
                     binding.setVariable("gre", greRuntime)
                     binding.setVariable("greResult", hostResult)
-                    def shell = new GroovyShell(binding)
-                    Script script
                     try {
                         log.logDebug("About to parse script")
                         script = shell.parse(scriptFile)
@@ -195,12 +209,12 @@ class Gre {
                         log.logError(user, hostname, "Complilation failed $e")
                         System.exit(1)
                     }
-                    scriptClass = script.class.name
-                    log.logDebug(user, hostname, "Script class is $scriptClass")
                     greRuntime.init(log, hostname, port, user, key, password, timeout)
                     use(GreCategory) {
                         try {
-                            script.run(scriptFile, arguments)
+                            //script.run(scriptFile, arguments)
+                            script.binding = binding
+                            script.invokeMethod("execute", null)
                         } catch (ExecutionException e) {
                             throw e;
                         } catch (Exception e) {
@@ -240,13 +254,20 @@ class Gre {
                     System.exit(1)
                 }
             }
-            if (postScriptFile) {
+            if (script.metaClass.respondsTo(script, "post")) {
+                def binding = new Binding()
+                binding.setVariable("greResult", result)
+                script.binding = binding
+                script.invokeMethod("post", null)
+            }
+
+            /*if (postScriptFile) {
                 def binding = new Binding()
                 binding.setVariable("greResult", result)
                 def shell = new GroovyShell(binding)
                 Script script = shell.parse(postScriptFile)
                 script.run()
-            }
+            }*/
         } else {
             System.exit(1)
         }

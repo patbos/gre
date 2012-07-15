@@ -38,4 +38,7 @@ class GreCategory {
         greRuntime.logScript(output)
     }
 
+    def static exec(Script script, Closure closure) {
+    }
+
 }

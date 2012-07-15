@@ -1,1 +1,3 @@
-exec("cat /proc/cpuinfo |grep processor|wc -l")
+def execute() {
+    exec("cat /proc/cpuinfo |grep processor|wc -l")
+}

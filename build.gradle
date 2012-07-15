@@ -34,7 +34,7 @@ task deb(dependsOn: jar) << {
     file.text = text + "\n"
 
     copy {
-        from 'build/libs/gre-0.2.jar'
+        from "build/libs/gre-$version" + ".jar"
         rename '.*', 'gre.jar'
         into "build/debian/usr/local/gre"
     }
@@ -45,4 +45,22 @@ task deb(dependsOn: jar) << {
         args "dpkg-deb",  "--build", "debian", "gre-$version-all.deb"
     }
 
+}
+
+task zip(dependsOn: jar) << {
+    copy {
+        from 'src/main/zip/'
+        into "build/zip/gre-$version"
+    }
+
+    copy {
+        from "build/libs/gre-$version" + ".jar"
+        rename '.*', 'gre.jar'
+        into "build/zip/gre-$version"
+    }
+
+    zip {
+        from "build/zip/"
+
+    }
 }
