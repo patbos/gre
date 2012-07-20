@@ -48,20 +48,13 @@ task deb(dependsOn: jar) << {
 
 }
 
-task zip(dependsOn: jar) << {
-    copy {
-        from 'src/main/zip/'
-        into "build/zip/gre-$version"
+task zip(dependsOn: jar, type: Zip) {
+    from ('src/main/zip/') {
+        into "gre-$version"
     }
 
-    copy {
-        from "build/libs/gre-$version" + ".jar"
+    from ("build/libs/gre-$version" + ".jar") {
         rename '.*', 'gre.jar'
-        into "build/zip/gre-$version"
-    }
-
-    zip {
-        from "build/zip/"
-
+        into "gre-$version"
     }
 }
