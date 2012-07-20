@@ -1,6 +1,6 @@
 GRE
 ===
-Groovy Remote Execution executes commands to remote servers using SSH
+Groovy Remote Execution is a deployment and automation framework.
 GRE uses default SSH with authentication key, but passwords are supported if same password can be used on all servers. 
 
 Introduction
@@ -32,10 +32,9 @@ def post() {
         println("$key $value")
 
     }
-}```
-
+}
+```
     gre -H localhost -p 22 script.groovy
-
 
 Build
 ===

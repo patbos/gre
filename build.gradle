@@ -40,6 +40,12 @@ task deb(dependsOn: jar) << {
         into "build/debian/usr/local/gre"
     }
 
+    copy {
+        from "src/main/zip/bin/gre"
+        into "build/debian/usr/local/gre/bin"
+    }
+
+
     exec {
         workingDir 'build'
         commandLine "fakeroot"
