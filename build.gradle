@@ -64,3 +64,7 @@ task zip(dependsOn: jar, type: Zip) {
         into "gre-$version"
     }
 }
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.1'
+}
