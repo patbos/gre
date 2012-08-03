@@ -119,7 +119,6 @@ if $cygwin; then
   [ -n "$HOME" ] &&
     HOME=`cygpath --path --windows "$HOME"`
 fi
-echo "$JAVACMD" -jar "${GRE_HOME}"/gre.jar $QUOTED_ARGS
 exec "$JAVACMD" \
   $GRE_OPTS \
   -jar "${GRE_HOME}"/gre.jar \
